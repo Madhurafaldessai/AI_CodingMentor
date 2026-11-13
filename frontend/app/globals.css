@@ -11,3 +11,20 @@
 .test-results{overflow:auto;margin-top:10px;display:flex;flex-direction:column;gap:7px;font:9px 'DM Mono',monospace}.test-case{display:flex;flex-direction:column;gap:3px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface2);color:var(--muted)}.test-case b{font-size:9px;color:var(--ink)}.test-pass b{color:var(--green)}.test-fail b,.error-output{color:#e56c73}.test-results>strong{padding:4px}.practice-page{padding:38px 0 60px}.filter-bar{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:13px}.filter-bar select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:10px}.filter-bar .tiny-muted{margin-left:auto}.challenge-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}.challenge-card{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;padding:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);transition:transform .14s}.challenge-card:hover{transform:translateY(-2px)}.challenge-index{font:10px 'DM Mono',monospace;color:var(--muted)}.challenge-card h3{font:700 12px 'Space Grotesk',sans-serif;margin:0 0 4px}.challenge-card p{font-size:9px;color:var(--muted);margin:0}.challenge-card .pill{grid-column:3;grid-row:1}.challenge-xp{grid-column:2;grid-row:2;font:9px 'DM Mono',monospace;color:var(--purple);display:flex;align-items:center;gap:4px}.challenge-card>svg{grid-column:3;grid-row:2;color:var(--muted)}.chapter-summary{width:100%;list-style:none;display:flex;align-items:center;gap:11px;padding:12px;border:0;text-align:left;background:transparent;color:var(--ink);cursor:pointer}.chapter-summary>b{font-size:11px;flex:1}.chapter-summary>svg{color:var(--muted)}.form-error{display:block;color:#c63f59;font-size:9px;padding-top:5px}.chapter button:focus-visible{outline-offset:-3px}
 .editor-wrap{display:block;padding:0}.editor-loading{height:100%;display:grid;place-items:center;color:var(--muted);font-size:10px}
 @media(max-width:720px){.challenge-list{grid-template-columns:1fr}.filter-bar{flex-wrap:wrap}.filter-bar .tiny-muted{width:100%;margin:0}.challenge-card{grid-template-columns:25px 1fr auto}.practice-page{padding-top:26px}.page-heading{gap:10px}.page-heading>.streak-chip{font-size:9px;white-space:nowrap}}
+.settings-page .page-heading h1{font-size:36px}
+.settings-page .page-heading p{font-size:14px}
+.settings-page .panel{min-height:290px;padding:24px}
+.settings-layout{gap:22px}
+.settings-row{padding:19px 2px}
+.settings-row b{font-size:14px}
+.settings-row small{font-size:12px}
+.settings-row select{font-size:13px;padding:10px 12px}
+.settings-bloom h3{font-size:20px}
+.settings-bloom p{font-size:13px}
+.settings-logout{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 2px 2px;margin-top:8px;border-top:1px solid var(--line)}
+.settings-logout>div{display:flex;flex-direction:column;gap:5px}
+.settings-logout b{font-size:14px}
+.settings-logout small{font-size:12px;color:var(--muted)}
+.settings-logout-button{background:#c6283d;color:#fff;border-color:#811a2a;box-shadow:2px 2px 0 #811a2a;font-size:13px;padding:10px 14px}
+.settings-logout-button:hover{background:#a91f32}
+@media(max-width:720px){.settings-page .panel{min-height:0;padding:18px}.settings-logout{align-items:flex-start;flex-direction:column}.settings-logout-button{width:100%}}
