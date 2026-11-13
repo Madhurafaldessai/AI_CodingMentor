@@ -1,0 +1,17 @@
+import { randomUUID } from 'node:crypto';
+import { NextResponse } from 'next/server';
+import { deductHintXp, demoState, saveMentorEvent } from '@backend/lib/db';
+import { explain } from '@backend/lib/mentorRules';
+import { askGroq } from '@backend/lib/llm';
+import { referenceSolutions } from '@backend/lib/solutions';
+import { challenges } from '@backend/lib/seed';
+import { learnerSummary,preferredStyle } from '@backend/lib/adaptive';
+import type { ExplainStyle, HintLevel, Language } from '@backend/lib/types';
+const cache=new Map<string,string>(); const windows=new Map<string,{count:number;start:number}>();
+const labels:Record<HintLevel,string>={1:'Nudge',2:'Clue',3:'Breakdown',4:'Full solution'};
+const styleCopy:Record<ExplainStyle,string>={analogy:'Think of it like turning a line of books around: the last one becomes first.',step_by_step:'Follow the data one small step at a time, then print the result.',visual:'Try tracing each value as it moves through the loop.',code_first:'Identify the string operation that returns a reversed copy.'};
+export async function POST(request:Request){try{const body=await request.json();const {challengeId,language,code,hintLevel,error}=body as {challengeId:string;language:Language;code:string;hintLevel:HintLevel;error?:string};if(typeof challengeId!=='string'||!['python','javascript','cpp'].includes(language)||typeof code!=='string'||![1,2,3,4].includes(hintLevel))return NextResponse.json({error:'Invalid mentor request'},{status:400});const ip=request.headers.get('x-forwarded-for')||'demo';const now=Date.now();const win=windows.get(ip);if(win&&now-win.start<60000&&win.count>=30)return NextResponse.json({error:'Please take a breath and try again in a moment.'},{status:429});if(!win||now-win.start>=60000)windows.set(ip,{count:1,start:now});else win.count++;
+ const style=(body.style||preferredStyle(demoState.styleScores as Record<ExplainStyle,number>)) as ExplainStyle;const key=`${challengeId}:${language}:${code}:${hintLevel}:${style}`;let message:string;let source:'rules'|'llm'|'cache'='rules';
+ if(cache.has(key)){message=cache.get(key)!;source='cache'}else{const rule=explain(language,code,error,hintLevel);if(rule){message=rule;source='rules'}else{const challenge=challenges.find(x=>x.id===challengeId);const generated=await askGroq({model:process.env.MENTOR_MODEL||'llama-3.1-8b-instant',style,level:hintLevel,profile:learnerSummary({pace:demoState.pace,style,mastery:demoState.mastery,errors:[]}),challenge:challenge?.description||challengeId,code,error,solution:hintLevel===4?referenceSolutions[challengeId]?.[language]:undefined});if(generated){message=generated;source='llm'}else{message=hintLevel===4?referenceSolutions[challengeId]?.[language]||styleCopy[style]:styleCopy[style];source='rules'}}cache.set(key,message)}
+ const eventId=randomUUID();saveMentorEvent(eventId,style);const xpCost:Record<HintLevel,number>={1:0,2:5,3:10,4:20};const totalXp=deductHintXp(xpCost[hintLevel]);const response={level:hintLevel,message,xpCost:xpCost[hintLevel],totalXp,source,eventId,style,...(hintLevel===4?{solution:referenceSolutions[challengeId]?.[language]||message}:{}),...(style==='visual'?{visual:{type:'steps',title:'A small trace',rows:[['1','Start at the final character'],['2','Move one character left'],['3','Print each character']]}}:{})};return NextResponse.json(response)
+ }catch{return NextResponse.json({error:'Bloom could not read that request.'},{status:400})}}

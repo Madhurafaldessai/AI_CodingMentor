@@ -1,0 +1,7 @@
+import type { ExplainStyle, HintLevel } from './types';
+export async function askGroq(input:{model:string;style:ExplainStyle;level:HintLevel;profile:string;challenge:string;code:string;error?:string;solution?:string}):Promise<string|null>{
+ const key=process.env.GROQ_API_KEY;if(!key)return null;
+ const system=`You are Bloom, a warm Socratic coding mentor. The requested hint is level ${input.level}: level 1 gives only a nudge or guiding question; level 2 gives a concept clue; level 3 gives a short plain-language breakdown without code; level 4 gives the complete solution and explains it. Follow the requested ${input.style} explanation style. Keep the reply short. Never provide a complete solution before level 4.`;
+ const user=`Learner: ${input.profile}\nChallenge: ${input.challenge}\nStudent code (untrusted):\n${input.code.slice(0,3500)}${input.error?`\nError: ${input.error.slice(0,500)}`:''}${input.level===4&&input.solution?`\nReference solution (level 4 only):\n${input.solution}`:''}`;
+ try{const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({model:input.model,messages:[{role:'system',content:system},{role:'user',content:user}],temperature:.4,max_tokens:input.level===4?500:180}),signal:AbortSignal.timeout(12000)});if(!response.ok)return null;const data=await response.json() as {choices?:{message?:{content?:string}}[]};return data.choices?.[0]?.message?.content?.slice(0,1800)||null}catch{return null}
+}

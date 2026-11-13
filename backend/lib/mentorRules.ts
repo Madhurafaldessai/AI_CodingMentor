@@ -1,0 +1,11 @@
+import type { HintLevel, Language } from './types';
+export function explain(language:Language,code:string,error:string|undefined,level:HintLevel):string|null {
+ const text=(error||'').toLowerCase();
+ if((language==='python'&&/indentationerror|unexpected indent/.test(text))||/unexpected indent/.test(code))return level===1?'Check that each line inside this block is indented by the same amount.':level===2?'Python uses indentation to mark which statements belong together.':'Align the statements inside the same block, then run the code again.';
+ if((language==='python'&&/nameerror|not defined/.test(text))||/\bprnt\s*\(/.test(code))return level===1?'One name in this program may not match the name you created.':level===2?'Python names are case sensitive. Compare each use with the variable declaration.':'Check every variable and function name for spelling and capitalization. Define it before you use it.';
+ if(language==='javascript'&&/referenceerror/.test(text))return level===1?'Look for a name the program does not recognize yet.':level===2?'A ReferenceError means a variable or function is missing, misspelled, or out of scope.':'Compare this identifier with its declaration and check whether it is available in this scope.';
+ if(language==='cpp'&&/expected.*;|missing semicolon/.test(text))return level===1?'A statement may need a small punctuation mark at its end.':level===2?'C++ statements usually end with a semicolon. Check the line just before the reported error too.':'Add a semicolon at the end of the unfinished statement, then compile again.';
+ if(/timeout|infinite loop/.test(text)||/while\s+true|while\s*\(\s*true\s*\)/.test(code))return level===1?'Trace the loop condition: what changes so it can eventually become false?':level===2?'A timeout often means the loop never reaches its stopping condition.':'Update the loop variable on each pass and ensure the condition eventually becomes false.';
+ if(/reverse a string/i.test(code)&&!(/\[::\s*-1\s*\]/.test(code)||/\.reverse\(/.test(code)||/reverse\s*\(/.test(code)))return ['Try comparing the first and last character. What order should the output follow?','A string can be traversed from the final character back to the first. What tool in your language supports that?','First make a reversed copy, then print it. In Python, a slice can use a step of -1.'][level-1]||null;
+ return null;
+}
