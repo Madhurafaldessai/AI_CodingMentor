@@ -6,6 +6,7 @@ import { learnerProgressUpdatedEvent, useLearnerStreak } from '../lib/use-learne
 import { browserSupabase } from '../lib/supabase';
 import { fetchWithUserSession } from '../lib/supabase';
 import { runInWorker } from '../lib/runners/client';
+import { PixelKnightMentorBox, type MentorMeta } from './pixel-knight-avatar';
 type Lang='python'|'javascript'|'cpp';
 const titles:Record<Lang,string>={python:'Python',javascript:'JavaScript',cpp:'C++'};
 const chapters:Record<Lang,string[]>={python:['Hello World','Variables','Control Flow','Loops','Checkpoint Project','Lists','Functions','Classes & Objects','Modules','Final Project'],javascript:['The Console','Variables','Conditionals','Loops','Checkpoint Project','Arrays','Functions','Objects','Async Basics','Final Project'],cpp:['Hello World (C++)','Variables & Control Flow','Loops','Functions','Arrays & Strings','Pointers & References','Classes & Objects','Inheritance & Polymorphism','Standard Template Library (STL)','File Handling','Final Project']};
@@ -162,6 +163,7 @@ export function LessonPage({language,exerciseId}:{language:Lang;exerciseId:strin
   const [mentorMessage,setMentorMessage]=useState('');
   const [mentorError,setMentorError]=useState('');
   const [mentorBusy,setMentorBusy]=useState(false);
+  const [mentorMeta,setMentorMeta]=useState<MentorMeta|null>(null);
   const [nextHintLevel,setNextHintLevel]=useState(1);
   const courseHref=`/course/${language==='cpp'?'cp+':language}`;
   const langLabel=titles[language];
@@ -252,6 +254,7 @@ export function LessonPage({language,exerciseId}:{language:Lang;exerciseId:strin
       const payload=await response.json();
       if(!response.ok)throw new Error(payload.error||'Bloom could not prepare a hint right now.');
       setMentorMessage(payload.message||'Compare your output with the expected result, one character at a time.');
+      setMentorMeta(payload);
       setNextHintLevel(Math.min(level+1,4));
     }catch(error){
       setMentorError(error instanceof Error?error.message:'Bloom could not prepare a hint right now.');
@@ -275,6 +278,7 @@ export function LessonPage({language,exerciseId}:{language:Lang;exerciseId:strin
       setResult(output);
       const passed=output.status==='passed';
       const failedTest=output.testResults.find(test=>!test.passed);
+      const actual=failedTest?.actual??output.stdout??output.stderr??'';
       const errorText=passed?'':output.stderr||`Your output was ${JSON.stringify(failedTest?.actual??output.stdout??'')}, but the expected output is ${JSON.stringify(lesson.expected)}.`;
       const oldRecord=progress[progressKey];
       const nextRecord={
@@ -310,10 +314,11 @@ export function LessonPage({language,exerciseId}:{language:Lang;exerciseId:strin
         }
       }
       if(!passed){
+        setMentorMessage(`🛡️ Close! Your code output '${actual}' instead of '${lesson.expected}'. Want a tactical clue?`);
         setNextHintLevel(level=>Math.min(level+1,4));
         void askBloom(nextHintLevel,code,errorText,nextRecord.attempts);
       }else{
-        setMentorMessage('Great work! You completed this exercise. Your next lesson is now unlocked.');
+        setMentorMessage('⚔️ Quest Complete! Your output matched every test case!');
         setMentorError('');
       }
     }catch(error){
@@ -332,7 +337,7 @@ export function LessonPage({language,exerciseId}:{language:Lang;exerciseId:strin
       <section className="panel lesson-instructions"><h2>Your task</h2><p>{lesson.task}</p><div className="lesson-tip"><b>What to learn</b><span>{exerciseId==='setting-up'?'The browser editor is already set up. Use the print statement for your selected language.':exerciseId==='hello-world'?'Use the print command to show text on the screen.':exerciseId==='print-and-comments'?'Use # for Python comments, // for JavaScript and C++ comments.':'Read the expected output carefully: the message must match exactly.'}</span></div><div className="lesson-example"><span>EXPECTED OUTPUT</span><code>{lesson.expected}</code></div></section>
       <section className="panel lesson-editor-panel"><div className="lesson-editor-head"><b>{langLabel}</b><span>main.{language==='python'?'py':language==='javascript'?'js':'cpp'}</span></div><label className="sr-only" htmlFor="lesson-code">Code editor</label><textarea id="lesson-code" className="lesson-code" spellCheck={false} value={code} onChange={event=>setCode(event.target.value)}/><button type="button" className="button button-primary lesson-run" disabled={busy} onClick={()=>void run()}>{busy?'Running…':'Run code'} <ArrowRight size={15}/></button>{result&&<div className={`lesson-output ${result.status==='passed'?'lesson-output-success':'lesson-output-error'}`} role="status"><b>{result.status==='passed'?'Nice work — that’s correct.':result.status==='failed'?'Not quite. Check your output and try again.':result.status==='save_error'?'Correct output, but progress could not be saved.':'Your program could not run.'}</b><pre>{result.stdout||result.stderr||'No output was produced.'}</pre></div>}
         {progressError&&<p className="lesson-save-error" role="alert">{progressError}</p>}
-        <div className="lesson-mentor"><div><Lightbulb size={17}/><b>Bloom, your AI mentor</b></div>{mentorMessage&&<p>{mentorMessage}</p>}{mentorError&&<p className="lesson-save-error" role="alert">{mentorError}</p>}<button type="button" className="button button-quiet" disabled={mentorBusy||busy} onClick={()=>void askBloom(nextHintLevel,code,lessonRecord?.lastError||'',(lessonRecord?.attempts||0)+1)}>{mentorBusy?'Bloom is thinking…':mentorMessage?'Ask Bloom for another hint':'Ask Bloom for a hint'} <ArrowRight size={14}/></button></div>
+        <div className="lesson-mentor"><PixelKnightMentorBox message={mentorMessage} busy={mentorBusy||busy} meta={mentorMeta} onAsk={()=>void askBloom(nextHintLevel,code,lessonRecord?.lastError||'',(lessonRecord?.attempts||0)+1)} buttonLabel={mentorMessage?'Ask ByteKnight for another hint →':'Ask ByteKnight for a hint →'}/>{mentorError&&<p className="lesson-save-error" role="alert">{mentorError}</p>}</div>
       </section>
     </div>
     <div className="lesson-navigation"><span>Exercise {exerciseIndex+1} of {exercises.length}{lessonRecord?.completed?' · Completed':''}</span>{exerciseIndex<exercises.length-1&&(lessonRecord?.completed?<a href={`/lesson/${language}/${exercises[exerciseIndex+1][0]}`}>Next exercise <ArrowRight size={14}/></a>:<span className="lesson-next-locked" aria-disabled="true">Complete this exercise to unlock the next one</span>)}</div>

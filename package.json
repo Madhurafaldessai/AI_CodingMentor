@@ -9,8 +9,10 @@
     "test:unit": "tsc --target es2020 --module commonjs --strict --outDir backend/.test-output --rootDir backend backend/lib/adaptive.ts backend/lib/types.ts backend/lib/xp.ts backend/lib/streak.ts && node --test backend/tests/*.test.cjs"
   },
   "dependencies": {
+    "@google/genai": "^3.3.0",
     "@monaco-editor/react": "^4.7.0",
     "@supabase/supabase-js": "^2.119.0",
+    "@vectorize-io/hindsight-client": "^1.2.1",
     "lucide-react": "^0.468.0",
     "next": "14.2.31",
     "react": "^18",

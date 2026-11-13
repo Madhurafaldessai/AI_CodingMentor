@@ -5,6 +5,7 @@ import { getGardenStage, getLevel, calculateXp } from '@backend/lib/xp';
 import { authenticateUser } from '@backend/lib/user-supabase';
 import { getCurrentStreak } from '@backend/lib/streak';
 import type { HintLevel, Language } from '@backend/lib/types';
+import { retainMemory } from '@backend/lib/hindsight';
 
 type AttemptLogEntry = {
   challengeId: string;
@@ -188,6 +189,12 @@ export async function POST(request: Request) {
   const language: Language = isLanguage(body.language)
     ? body.language
     : previous?.language ?? profile?.language ?? 'python';
+  retainMemory(auth.user.id, {
+    category: 'experience',
+    challengeId: challenge.id,
+    language,
+    summary: `${body.passed ? 'Completed' : 'Attempted'} ${challenge.id} after ${body.attempts} attempt(s): ${(body.errorCategories as string[]).join(', ') || 'no error recorded'}`
+  });
   const completedChallenges: string[] = previous?.completed_challenges ?? [];
   const newlyCompleted = body.passed && !completedChallenges.includes(challenge.id);
   const updatedCompleted = newlyCompleted
