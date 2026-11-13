@@ -28,3 +28,10 @@
 .settings-logout-button{background:#c6283d;color:#fff;border-color:#811a2a;box-shadow:2px 2px 0 #811a2a;font-size:13px;padding:10px 14px}
 .settings-logout-button:hover{background:#a91f32}
 @media(max-width:720px){.settings-page .panel{min-height:0;padding:18px}.settings-logout{align-items:flex-start;flex-direction:column}.settings-logout-button{width:100%}}
+.continue-error{display:block;color:#a91f32;font-size:10px;margin-top:8px;max-width:320px}
+.continue-summary{display:block;color:#fff;font-size:11px;font-weight:700;margin-top:8px}
+.auth-card form{width:100%;display:flex;flex-direction:column}
+.auth-card form label{margin-top:11px}
+.auth-card form input{margin-top:5px}
+.auth-card form .auth-submit{width:100%;margin-top:16px}
+.auth-card :disabled{cursor:wait;opacity:.7}

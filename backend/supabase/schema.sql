@@ -7,6 +7,19 @@ create table if not exists public.profiles (
   theme_preference text default 'system', total_xp integer not null default 0,
   created_at timestamptz not null default now()
 );
+create table if not exists public.learner_progress (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  language text not null default 'python' check (language in ('python','javascript','cpp')),
+  current_challenge_id text default 'reverse-string',
+  completed_challenges text[] not null default '{}',
+  total_xp integer not null default 0,
+  level integer not null default 1,
+  streak integer not null default 0,
+  pace text not null default 'steady' check (pace in ('fast','steady','needs_support')),
+  concept_mastery jsonb not null default '{}'::jsonb,
+  attempt_log jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
 create table if not exists public.challenges (
   id text primary key, title text not null, difficulty text not null,
   tags text[] not null default '{}', languages text[] not null default '{}',
@@ -40,11 +53,13 @@ create table if not exists public.user_badges (
 );
 alter table public.challenge_solutions enable row level security;
 alter table public.profiles enable row level security;
+alter table public.learner_progress enable row level security;
 alter table public.attempts enable row level security;
 alter table public.concept_mastery enable row level security;
 alter table public.mentor_events enable row level security;
 alter table public.user_badges enable row level security;
 create policy "profile owner access" on public.profiles for all using (auth.uid()=id) with check (auth.uid()=id);
+create policy "learner progress owner access" on public.learner_progress for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
 create policy "attempt owner access" on public.attempts for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
 create policy "mastery owner access" on public.concept_mastery for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
 create policy "mentor owner access" on public.mentor_events for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
