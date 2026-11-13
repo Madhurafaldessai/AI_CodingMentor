@@ -1,0 +1,658 @@
+.landing,
+.dashboard {
+  padding-top: 28px;
+}
+
+.garden-scene {
+  height: clamp(320px, 35vw, 410px);
+  border: 2px solid #1c3d47;
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 #1c3d47;
+  background: linear-gradient(180deg, #a8e1ef 0%, #d9f5e9 51%, #8fd59d 52%, #328a67 100%);
+}
+
+.dark .garden-scene {
+  background: linear-gradient(180deg, #11254a 0%, #4f85b2 50%, #388162 51%, #144939 100%);
+}
+
+.banner-content {
+  top: 30px;
+  left: clamp(20px, 5%, 68px);
+  width: min(460px, calc(100% - 40px));
+  max-width: 460px;
+  padding: 0;
+  transform: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.banner-content .eyebrow {
+  color: #28644f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+
+.banner-content h1 {
+  margin: 10px 0 8px;
+  color: #183c42;
+  font-size: clamp(36px, 4.2vw, 48px);
+  line-height: 1.04;
+  letter-spacing: -1.6px;
+}
+
+.banner-content h1 span {
+  color: #237b58;
+}
+
+.banner-content p {
+  max-width: 42ch;
+  margin: 0 0 17px;
+  color: #35565a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dark .banner-content {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dark .banner-content .eyebrow,
+.dark .banner-content p {
+  color: #d3e6dc;
+}
+
+.dark .banner-content h1 {
+  color: #f2fbf2;
+}
+
+.dark .banner-content h1 span {
+  color: #98efc1;
+}
+
+.dark .example code {
+  color: #81b9ff;
+}
+
+.landing-below {
+  gap: 32px;
+  padding: 46px 3% 54px;
+}
+
+.landing-below p {
+  max-width: 58ch;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.landing-card {
+  gap: 20px;
+  padding: 22px 24px;
+  border-radius: 16px;
+}
+
+.landing-card p {
+  margin: 7px 0 10px;
+}
+
+.profile-btn {
+  gap: 8px;
+  padding: 5px 11px 5px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface2);
+  box-shadow: none;
+  color: var(--ink);
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.profile-btn::before {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #2e9b69;
+  color: #fff;
+  content: 'A';
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.profile-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(41, 169, 106, 0.13);
+}
+
+.profile-btn svg {
+  color: var(--muted);
+}
+
+.topbar {
+  position: relative;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.topbar > .brand {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.topbar > .top-actions {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+}
+
+.course-language-picker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.course-language-picker select {
+  min-height: 34px;
+  max-width: 118px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.topbar nav a {
+  font-size: 13px;
+}
+
+.topbar nav a[href="/practice"],
+.topbar nav a[href="/interview"] {
+  font-size: 12px;
+}
+
+.topbar nav {
+  position: static;
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.3vw, 20px);
+  min-width: 0;
+  margin: 0 auto;
+  white-space: nowrap;
+}
+
+.page {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+}
+
+.page h1,
+.page h2,
+.page h3 {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.page-heading p,
+.course-hero p,
+.page p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.course-hero .course-copy {
+  position: relative;
+  z-index: 1;
+  width: min(50%, 480px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.course-hero h1 {
+  color: #183c42;
+}
+
+.course-hero p {
+  max-width: 40ch;
+  margin-bottom: 0;
+  color: #000;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.course-hero .hero-code {
+  z-index: 0;
+}
+
+.dark .course-hero h1 {
+  color: #f2fbf2;
+}
+
+.dark .course-hero p {
+  color: #dce9e5;
+}
+
+.tiny-muted,
+.panel-label {
+  font-size: 12px;
+}
+
+.page .label {
+  font-size: 12px;
+}
+
+.page-heading h1,
+.course-hero h1 {
+  font-size: clamp(30px, 2.7vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+
+.page .section-title h2,
+.page .section-title h3,
+.course-title h2 {
+  font-size: 17px;
+}
+
+.challenge-card h3 {
+  font-size: 15px;
+}
+
+.challenge-card p {
+  font-size: 13px;
+}
+
+.course-page .chapter-summary > b {
+  font-size: 15px;
+}
+
+.course-page .chapter-num {
+  font-size: 13px;
+}
+
+.course-page .chapter-progress {
+  font-size: 12px;
+}
+
+.course-page .exercise-row {
+  font-size: 13px;
+}
+
+.course-page .exercise-row b {
+  font-size: 14px;
+}
+
+.course-page .start-pill,
+.course-page .locked-row {
+  font-size: 12px;
+}
+
+.course-page .side-stat {
+  font-size: 13px;
+}
+
+.course-page .profile-heading b {
+  font-size: 15px;
+}
+
+.settings-page .badges small,
+.settings-page .stats-grid small {
+  font-size: 12px;
+}
+
+.course-page .grey-badge small {
+  font-size: 12px !important;
+}
+
+.settings-page .settings-row select {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.page .pill {
+  font-size: 11px;
+}
+
+.example code {
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.example span,
+.settings-row small,
+.hint-row small,
+.hint-row b {
+  font-size: 13px;
+}
+
+.auth-sub {
+  font-size: 13px;
+}
+
+.button {
+  min-height: 40px;
+  font-size: 13px;
+}
+
+.action-bar .button,
+.workspace-footer .button {
+  min-height: 38px;
+  font-size: 12px;
+}
+
+.workspace .runner,
+.workspace .shortcut,
+.workspace .editor-language,
+.workspace .file-tab {
+  font-size: 12px;
+}
+
+.nav-active {
+  position: relative;
+}
+
+.profile-btn.profile-active {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(41, 169, 106, 0.13);
+}
+
+.settings-page .settings-row b {
+  font-size: 15px;
+}
+
+.settings-page .settings-row small {
+  font-size: 12px;
+}
+
+.profile-page-heading {
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.profile-page-heading h1 {
+  font-size: clamp(30px, 3.5vw, 36px);
+}
+
+.profile-page-heading p {
+  font-size: 14px;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.profile-actions .button {
+  min-width: 112px;
+}
+
+.dashboard .panel h3 {
+  font-size: 16px;
+}
+
+.dashboard .quest-copy b,
+.dashboard .profile-xp b {
+  font-size: 13px;
+}
+
+.dashboard .quest-copy small,
+.dashboard .profile-xp small,
+.dashboard .leader-row strong small,
+.dashboard .course-meta small,
+.dashboard .profile-stats small,
+.dashboard .stats-grid small,
+.dashboard .weekday small,
+.dashboard .badges small {
+  font-size: 12px;
+}
+
+.dashboard .leader-head {
+  font-size: 10px;
+}
+
+.dashboard .leader-row,
+.dashboard .leader-row strong {
+  font-size: 13px;
+}
+
+.dashboard .course-meta b {
+  font-size: 13px;
+}
+
+.dashboard .profile-stats strong,
+.dashboard .stats-grid strong {
+  font-size: 14px;
+}
+
+.dashboard .profile-heading h3 {
+  font-size: 16px;
+}
+
+.dashboard .profile-heading .tiny-muted {
+  font-size: 12px;
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .dashboard-grid > .column {
+    min-width: 0;
+  }
+}
+
+.dashboard .stats-grid {
+  grid-auto-rows: minmax(48px, auto);
+  gap: 14px 10px;
+}
+
+.dashboard .stats-grid > div {
+  grid-template-columns: 30px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 48px;
+}
+
+.dashboard .stats-grid .stat-icon {
+  grid-row: 1 / span 2;
+}
+
+.dashboard .stats-grid strong,
+.dashboard .stats-grid small {
+  line-height: 1.25;
+}
+
+.dashboard .badges,
+.course-page .badges.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboard .badges > span,
+.course-page .badges.compact > .grey-badge {
+  min-height: 76px;
+  padding: 8px 4px;
+  justify-content: flex-start;
+}
+
+.dashboard .badges small,
+.course-page .badges.compact > .grey-badge small {
+  display: flex;
+  min-height: 2.4em;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+
+.course-page .badges.compact > .grey-badge {
+  padding: 8px 4px !important;
+  opacity: 0.72 !important;
+}
+
+.course-page .badges.compact > .grey-badge small {
+  font-size: 12px !important;
+}
+
+@media (max-width: 720px) {
+  .landing,
+  .dashboard {
+    padding-top: 18px;
+  }
+
+  .landing .garden-scene,
+  .dashboard .garden-scene {
+    height: clamp(320px, 70vw, 390px);
+  }
+
+  .landing .banner-content,
+  .dashboard .banner-content {
+    top: 24px;
+    bottom: auto;
+    left: 6%;
+    width: 88%;
+    padding: 0;
+    transform: none;
+  }
+
+  .landing .banner-content h1,
+  .dashboard .banner-content h1 {
+    font-size: clamp(28px, 7.5vw, 34px);
+    letter-spacing: -1.5px;
+  }
+
+  .landing .banner-content p,
+  .dashboard .banner-content p {
+    max-width: 34ch;
+    font-size: 13px;
+  }
+
+  .topbar nav {
+    display: none;
+  }
+
+  .page-heading h1,
+  .course-hero h1 {
+    font-size: 30px;
+  }
+
+  .course-hero {
+    height: auto;
+    min-height: 0;
+    align-items: stretch;
+    padding: 14px;
+  }
+
+  .course-hero .course-copy {
+    width: 100%;
+    padding: 0;
+  }
+
+  .course-hero .hero-code {
+    display: none;
+  }
+
+  .course-hero p {
+    max-width: none;
+    font-size: 13px;
+  }
+
+  .landing-below {
+    gap: 20px;
+    padding: 34px 4% 42px;
+  }
+}
+
+@media (max-width: 980px) {
+  .course-language-picker > span {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar {
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  .topbar nav {
+    display: none;
+  }
+
+  .course-language-picker > span {
+    display: none;
+  }
+
+  .top-actions {
+    gap: 7px;
+  }
+
+  .course-language-picker select {
+    width: 86px;
+    padding: 0 5px;
+  }
+
+  .top-actions > .streak-chip {
+    display: none;
+  }
+
+  .brand {
+    gap: 6px;
+    font-size: 15px;
+  }
+
+  .brand-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .profile-btn {
+    gap: 6px;
+    padding: 4px 8px 4px 4px;
+    font-size: 11px;
+  }
+
+  .profile-btn::before {
+    width: 24px;
+    height: 24px;
+  }
+
+  .page-heading p,
+  .course-hero p,
+  .page p {
+    font-size: 14px;
+  }
+
+  .profile-page-heading {
+    align-items: flex-start;
+  }
+
+  .profile-page-heading p {
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-btn {
+    transition: none;
+  }
+}
