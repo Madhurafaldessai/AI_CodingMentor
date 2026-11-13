@@ -15,6 +15,8 @@ create table if not exists public.learner_progress (
   total_xp integer not null default 0,
   level integer not null default 1,
   streak integer not null default 0,
+  activity_dates date[] not null default '{}',
+  lesson_progress jsonb not null default '{}'::jsonb,
   pace text not null default 'steady' check (pace in ('fast','steady','needs_support')),
   concept_mastery jsonb not null default '{}'::jsonb,
   attempt_log jsonb not null default '[]'::jsonb,

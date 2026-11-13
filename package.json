@@ -6,7 +6,7 @@
     "dev": "next dev frontend",
     "build": "next build frontend",
     "start": "next start frontend",
-    "test:unit": "tsc --target es2020 --module commonjs --strict --outDir backend/.test-output --rootDir backend backend/lib/adaptive.ts backend/lib/types.ts backend/lib/xp.ts && node --test backend/tests/*.test.cjs"
+    "test:unit": "tsc --target es2020 --module commonjs --strict --outDir backend/.test-output --rootDir backend backend/lib/adaptive.ts backend/lib/types.ts backend/lib/xp.ts backend/lib/streak.ts && node --test backend/tests/*.test.cjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

@@ -3,6 +3,7 @@ import { chooseNextChallenge, getPace, updateConceptMastery } from '@backend/lib
 import { challenges } from '@backend/lib/seed';
 import { getGardenStage, getLevel, calculateXp } from '@backend/lib/xp';
 import { authenticateUser } from '@backend/lib/user-supabase';
+import { getCurrentStreak } from '@backend/lib/streak';
 import type { HintLevel, Language } from '@backend/lib/types';
 
 type AttemptLogEntry = {
@@ -35,6 +36,9 @@ export async function GET(request: Request) {
   }
 
   const progress = progressResult.data;
+  const attemptLog = (progress?.attempt_log ?? []) as AttemptLogEntry[];
+  const activityDates: string[] = progress?.activity_dates
+    ?? attemptLog.map(attempt => attempt.completedAt.slice(0, 10));
   return NextResponse.json({
     username: profileResult.data?.username ?? auth.user.email?.split('@')[0] ?? 'Learner',
     language: progress?.language ?? profileResult.data?.language ?? 'python',
@@ -42,7 +46,7 @@ export async function GET(request: Request) {
     completedChallenges: progress?.completed_challenges ?? [],
     totalXp: progress?.total_xp ?? 0,
     level: progress?.level ?? 1,
-    streak: progress?.streak ?? 0,
+    streak: getCurrentStreak(activityDates),
     pace: progress?.pace ?? 'steady',
     conceptMastery: progress?.concept_mastery ?? {}
   });
@@ -113,6 +117,7 @@ export async function PATCH(request: Request) {
     total_xp: previous?.total_xp ?? 0,
     level: previous?.level ?? 1,
     streak: previous?.streak ?? 0,
+    activity_dates: previous?.activity_dates ?? [],
     pace: previous?.pace ?? 'steady',
     concept_mastery: previous?.concept_mastery ?? {},
     attempt_log: previous?.attempt_log ?? [],
@@ -213,6 +218,14 @@ export async function POST(request: Request) {
     completedAt: new Date().toISOString()
   };
   const updatedAttemptLog = [...attemptLog, nextAttempt].slice(-50);
+  const activityDates: string[] = previous?.activity_dates
+    ?? attemptLog.map(attempt => attempt.completedAt.slice(0, 10));
+  const today = new Date().toISOString().slice(0, 10);
+  const updatedActivityDates = activityDates.includes(today)
+    ? [...activityDates]
+    : [...activityDates, today];
+  updatedActivityDates.sort();
+  const streak = getCurrentStreak(updatedActivityDates);
   const pace = getPace(updatedAttemptLog.map(attempt => ({
     ...attempt,
     expectedTimeSec: 120
@@ -227,7 +240,6 @@ export async function POST(request: Request) {
   }));
   const next = chooseNextChallenge(candidates, mastery, updatedCompleted, pace);
   const currentChallengeId = body.passed ? next?.id ?? null : challenge.id;
-  const streak = previous?.streak ?? 0;
   const { error: saveError } = await auth.client.from('learner_progress').upsert({
     user_id: auth.user.id,
     language,
@@ -236,6 +248,7 @@ export async function POST(request: Request) {
     total_xp: totalXp,
     level,
     streak,
+    activity_dates: updatedActivityDates,
     pace,
     concept_mastery: mastery,
     attempt_log: updatedAttemptLog,
