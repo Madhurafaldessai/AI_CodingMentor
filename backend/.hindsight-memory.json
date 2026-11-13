@@ -1,0 +1,20 @@
+{
+  "::1": [
+    {
+      "category": "opinion",
+      "challengeId": "lesson-setting-up",
+      "language": "python",
+      "summary": "Prefers step-by_step coaching in PYTHON",
+      "id": "1794608499798-wm5ot",
+      "timestamp": 1794608499798
+    },
+    {
+      "category": "experience",
+      "challengeId": "lesson-setting-up",
+      "language": "python",
+      "summary": "Learner encountered issue on lesson-setting-up (python): \"PythonError: Traceback (most recent call last):\"",
+      "id": "1794608499798-y498s",
+      "timestamp": 1794608499798
+    }
+  ]
+}

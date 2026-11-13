@@ -88,7 +88,7 @@ function buildPrompts(input: MentorLlmInput) {
 
   const levelGuides: Record<HintLevel, string> = {
     1: 'LEVEL 1 (NUDGE): Write 1-3 short sentences, under 420 characters, speaking directly to "you". Ask a sharp question about current output versus the goal. ZERO code blocks.',
-    2: 'LEVEL 2 (CLUE): Write 1-3 short sentences, under 420 characters, speaking directly to "you". Name the exact idiomatic tool (Python reversal MUST be `s[::-1]`, never list/reverse/join). ZERO code blocks.',
+    2: 'LEVEL 2 (CLUE): Write 1-3 short sentences, under 420 characters, speaking directly to "you". Name the exact idiomatic tool using the variable name from the player\'s code (for example, `text[::-1]`, never generic `s[::-1]`). For Python reversal, use slicing only; never suggest JavaScript `.split().reverse()` or list/reverse/join. ZERO code blocks.',
     3: 'LEVEL 3 (BREAKDOWN): Write 3 short bullet points (`•`) explaining the exact fix. Do NOT paste the final code block.',
     4: 'LEVEL 4 (FULL SOLUTION): Give a 1-sentence encouragement followed by the cleanest, most idiomatic working code block.'
   };
@@ -97,8 +97,9 @@ function buildPrompts(input: MentorLlmInput) {
 STRICT RULES:
 - Speak directly to the player using "you" (NEVER say "the learner" or "Certainly!").
 - NEVER use markdown headers like "### Step 1" or "### Explanation".
-- Prefer clean idiomatic tricks (e.g., in Python, always recommend slice \`s[::-1]\` for reversing strings, NEVER boring list-reverse-join essays).
-- NEVER waste a sentence explaining what \`input()\` or \`print()\` does. Jump straight to the exact line/expression that needs to change (e.g. changing \`print(s)\` to \`print(s[::-1])\`).
+- Always inspect the player's code and use its real identifiers in every explanation and code example. Never invent a generic variable such as \`s\` when the code uses \`text\`.
+- Prefer clean language-appropriate idioms: for Python reversal, recommend the actual variable followed by \`[::-1]\` (for example \`text[::-1]\`), never JavaScript split/reverse/join or list/reverse/join.
+- NEVER waste a sentence explaining what \`input()\` or \`print()\` does. Jump straight to the exact line/expression that needs to change (e.g. changing \`print(text)\` to \`print(text[::-1])\`).
 - Levels 1-2 must stay below 420 characters and use no more than 3 sentences. Level 3 must have only 2-3 short bullet points. Never use a full code block before Level 4.
 - ${levelGuides[input.level]}
 - Style (${input.style}): ${styleGuides[input.style]}`;
@@ -122,7 +123,8 @@ async function callLocalOllama(
   user: string,
   level: HintLevel
 ): Promise<string | null> {
-  const response = await fetch(`${baseUrl}/api/generate`, {
+  const ollamaUrl = baseUrl.replace(/localhost/gi, '127.0.0.1').replace(/\/$/, '');
+  const response = await fetch(`${ollamaUrl}/api/generate`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -130,12 +132,13 @@ async function callLocalOllama(
       system,
       prompt: user,
       stream: false,
+      keep_alive: '30m',
       options: {
         temperature: 0.25,
         num_predict: level === 4 ? 320 : 120
       }
     }),
-    signal: AbortSignal.timeout(5000)
+    signal: AbortSignal.timeout(30000)
   });
 
   if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);

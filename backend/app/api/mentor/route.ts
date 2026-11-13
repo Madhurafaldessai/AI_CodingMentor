@@ -7,6 +7,7 @@ import { analyzeAndRetainAttempt } from '@backend/lib/hindsight';
 import { referenceSolutions } from '@backend/lib/solutions';
 import { challenges } from '@backend/lib/seed';
 import { learnerSummary, preferredStyle } from '@backend/lib/adaptive';
+import { authenticateUser } from '@backend/lib/user-supabase';
 import type { ExplainStyle, HintLevel, Language } from '@backend/lib/types';
 
 const windows = new Map<string, { count: number; start: number }>();
@@ -89,6 +90,8 @@ export async function POST(request: Request) {
     const typedLanguage = language as Language;
     const typedLevel = hintLevel as HintLevel;
     const ip = request.headers.get('x-forwarded-for') || 'demo';
+    const auth = await authenticateUser(request);
+    const userId = auth.user?.id;
     const now = Date.now();
     const win = windows.get(ip);
 
@@ -112,7 +115,8 @@ export async function POST(request: Request) {
 
     // 1. Run Hindsight Memory Engine (Retain -> Recall -> Reflect)
     const hindsight = await analyzeAndRetainAttempt({
-      learnerId: ip,
+      learnerId: userId || ip,
+      userId,
       challengeId,
       language: typedLanguage,
       code,
@@ -157,9 +161,9 @@ export async function POST(request: Request) {
 
     let message: string;
     let source: 'rules' | 'llm' | 'cache' = 'rules';
-    let provider = 'Offline Rule Engine';
+    let provider = 'Rule Fallback';
     let model = 'mentorRules';
-    let isLocal = true;
+    let isLocal = false;
     let latencyMs = 1;
 
     if (aiResult) {

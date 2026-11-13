@@ -1,3 +1,6 @@
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { supabaseAdmin } from './supabase';
 import type { ExplainStyle, HintLevel, Language } from './types';
 
 export type HindsightFact = {
@@ -17,6 +20,9 @@ export type HindsightSnapshot = {
 };
 
 const memoryStore = new Map<string, HindsightFact[]>();
+const GUEST_MEMORY_FILE = join(process.cwd(), 'backend', '.hindsight-memory.json');
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+let guestMemoryLoad: Promise<void> | null = null;
 
 const HINDSIGHT_API_KEY = process.env.HINDSIGHT_API_KEY;
 const HINDSIGHT_API_URL = (
@@ -25,6 +31,150 @@ const HINDSIGHT_API_URL = (
 const HINDSIGHT_BANK_ID = process.env.HINDSIGHT_BANK_ID || 'bytebloom-learners';
 
 const HINDSIGHT_TIMEOUT_MS = 2500;
+
+function isSupabaseUserId(userId?: string): userId is string {
+  return Boolean(userId && UUID_PATTERN.test(userId));
+}
+
+async function loadGuestMemory(): Promise<void> {
+  if (!guestMemoryLoad) {
+    guestMemoryLoad = readFile(GUEST_MEMORY_FILE, 'utf8')
+      .then((raw) => {
+        const saved = JSON.parse(raw) as Record<string, HindsightFact[]>;
+        for (const [learnerId, facts] of Object.entries(saved)) {
+          if (!isSupabaseUserId(learnerId) && Array.isArray(facts)) {
+            memoryStore.set(learnerId, facts.slice(0, 30));
+          }
+        }
+      })
+      .catch(() => undefined);
+  }
+  await guestMemoryLoad;
+}
+
+async function saveGuestMemory(): Promise<void> {
+  const guests = Object.fromEntries(
+    Array.from(memoryStore.entries())
+      .filter(([learnerId]) => !isSupabaseUserId(learnerId))
+      .map(([learnerId, facts]) => [learnerId, facts.slice(0, 30)])
+  );
+  try {
+    await writeFile(GUEST_MEMORY_FILE, JSON.stringify(guests, null, 2), 'utf8');
+  } catch (error) {
+    console.warn('Unable to save guest Hindsight memory backup', error);
+  }
+}
+
+type HindsightAttemptLog = {
+  type: 'hindsight_memory';
+  category: 'experience';
+  challengeId: string;
+  language: Language;
+  mistake: string;
+  reflection: string;
+  timestamp: string;
+};
+
+async function persistSupabaseMemory(params: {
+  userId: string;
+  challengeId: string;
+  language: Language;
+  style: ExplainStyle;
+  level: HintLevel;
+  latestObservation: string;
+  error?: string;
+  reflection: string;
+}): Promise<void> {
+  const client = supabaseAdmin;
+  if (!client) return;
+
+  const memoryEntry: HindsightAttemptLog = {
+    type: 'hindsight_memory',
+    category: 'experience',
+    challengeId: params.challengeId,
+    language: params.language,
+    mistake: params.error?.trim() || params.latestObservation,
+    reflection: params.reflection,
+    timestamp: new Date().toISOString()
+  };
+
+  const [{ error: eventError }, progressResult] = await Promise.all([
+    client.from('mentor_events').insert({
+      user_id: params.userId,
+      challenge_id: params.challengeId,
+      style: params.style,
+      hint_level: params.level,
+      message: params.latestObservation
+    }),
+    client
+      .from('learner_progress')
+      .select('attempt_log')
+      .eq('user_id', params.userId)
+      .maybeSingle()
+  ]);
+
+  if (eventError) console.warn('Unable to persist Hindsight mentor event', eventError);
+  if (progressResult.error) {
+    console.warn('Unable to load learner progress for Hindsight memory', progressResult.error);
+    return;
+  }
+
+  const priorLog = Array.isArray(progressResult.data?.attempt_log)
+    ? progressResult.data.attempt_log
+    : [];
+  const attemptLog = [...priorLog, memoryEntry].slice(-50);
+  const { error: progressError } = await client.from('learner_progress').upsert({
+    user_id: params.userId,
+    language: params.language,
+    attempt_log: attemptLog,
+    updated_at: memoryEntry.timestamp
+  }, { onConflict: 'user_id' });
+  if (progressError) console.warn('Unable to persist Hindsight learner memory', progressError);
+}
+
+export async function recallMemory(params: {
+  learnerId: string;
+  userId?: string;
+  challengeId: string;
+  language: Language;
+}): Promise<string[]> {
+  const localRelevant = (memoryStore.get(params.learnerId) || [])
+    .filter((memory) => memory.challengeId === params.challengeId || memory.language === params.language)
+    .slice(0, 3)
+    .map((memory) => memory.summary);
+
+  if (!isSupabaseUserId(params.userId) || !supabaseAdmin) return localRelevant;
+
+  const [eventsResult, attemptsResult] = await Promise.all([
+    supabaseAdmin
+      .from('mentor_events')
+      .select('message')
+      .eq('user_id', params.userId)
+      .eq('challenge_id', params.challengeId)
+      .order('created_at', { ascending: false })
+      .limit(6),
+    supabaseAdmin
+      .from('attempts')
+      .select('error_categories')
+      .eq('user_id', params.userId)
+      .eq('challenge_id', params.challengeId)
+      .eq('language', params.language)
+      .order('created_at', { ascending: false })
+      .limit(6)
+  ]);
+
+  if (eventsResult.error) console.warn('Unable to recall Hindsight mentor events', eventsResult.error);
+  if (attemptsResult.error) console.warn('Unable to recall Hindsight attempts', attemptsResult.error);
+  const eventFacts = (eventsResult.data || [])
+    .map((event) => typeof event.message === 'string' ? event.message.trim() : '')
+    .filter(Boolean);
+  const attemptFacts = (attemptsResult.data || []).flatMap((attempt) => {
+    const errors = Array.isArray(attempt.error_categories) ? attempt.error_categories : [];
+    return errors.filter((error): error is string => typeof error === 'string' && Boolean(error.trim()))
+      .map((error) => `Previous ${params.language} attempt: ${error.trim()}`);
+  });
+  return Array.from(new Set([...eventFacts, ...attemptFacts, ...localRelevant])).slice(0, 6);
+}
 
 async function hindsightFetch(
   path: string,
@@ -110,6 +260,7 @@ export function retainMemory(
 
 export async function analyzeAndRetainAttempt(params: {
   learnerId?: string;
+  userId?: string;
   challengeId: string;
   language: Language;
   code: string;
@@ -118,7 +269,8 @@ export async function analyzeAndRetainAttempt(params: {
   level: HintLevel;
 }): Promise<HindsightSnapshot> {
   const learnerId = params.learnerId || 'default-learner';
-  const { challengeId, language, code, error, style, level } = params;
+  const { challengeId, language, code, error, style, level, userId } = params;
+  if (!isSupabaseUserId(userId)) await loadGuestMemory();
 
   // 1. RETAIN locally right away
   let latestObservation = `Practicing ${challengeId} in ${language.toUpperCase()} (Hint L${level}, ${style} style).`;
@@ -148,6 +300,7 @@ export async function analyzeAndRetainAttempt(params: {
     language,
     summary: `Prefers ${style.replace('_', '-')} coaching in ${language.toUpperCase()}`
   });
+  if (!isSupabaseUserId(userId)) await saveGuestMemory();
 
   // 2. Sync with Real Vectorize Hindsight Cloud (https://api.hindsight.vectorize.io)
   const bankId = `${HINDSIGHT_BANK_ID}-${learnerId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -158,15 +311,9 @@ export async function analyzeAndRetainAttempt(params: {
   });
 
   const allMemories = memoryStore.get(learnerId) || [];
-  const localRelevant = allMemories
-    .filter((m) => m.challengeId === challengeId || m.language === language)
-    .slice(0, 3)
-    .map((m) => m.summary);
+  const recalledFromStorage = await recallMemory({ learnerId, userId, challengeId, language });
 
-  const recalledFacts =
-    cloudResult.recalled && cloudResult.recalled.length > 0
-      ? cloudResult.recalled
-      : localRelevant;
+  const recalledFacts = Array.from(new Set([...(cloudResult.recalled || []), ...recalledFromStorage])).slice(0, 6);
 
   // 3. REFLECT: Generate a sharp insight
   let reflection =
@@ -178,6 +325,19 @@ export async function analyzeAndRetainAttempt(params: {
       'Pythonic shortcut: `s[::-1]` reverses a string in one slice without converting to a list first!';
   } else if (recalledFacts.length > 0) {
     reflection = `Recalled ${recalledFacts.length} memory node(s) for${challengeId}—comparing your current output against past attempts.`;
+  }
+
+  if (isSupabaseUserId(userId)) {
+    await persistSupabaseMemory({
+      userId,
+      challengeId,
+      language,
+      style,
+      level,
+      latestObservation,
+      error,
+      reflection
+    });
   }
 
   return {
