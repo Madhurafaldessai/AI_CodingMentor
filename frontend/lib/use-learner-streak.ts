@@ -42,7 +42,7 @@ export function useLearnerStreak() {
           } catch { /* skip */ }
         }
         if (active) {
-          const unique = [...new Set(latestDates)].sort();
+          const unique = Array.from(new Set(latestDates)).sort();
           setStreak(computeStreak(unique));
         }
       } catch (error) {

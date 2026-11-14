@@ -88,7 +88,7 @@ type LearnerSnapshot={
 };
 
 function computeLocalStreak(progress: Record<string, LessonRecord>): number {
-  const dates = [...new Set(Object.values(progress).filter(x=>x.completedAt).map(x=>x.completedAt!.slice(0,10)))].sort();
+  const dates = Array.from(new Set(Object.values(progress).filter(x=>x.completedAt).map(x=>x.completedAt!.slice(0,10)))).sort();
   if (!dates.length) return 0;
   const today = new Date().toISOString().slice(0,10);
   const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
