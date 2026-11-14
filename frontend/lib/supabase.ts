@@ -14,10 +14,12 @@ export async function fetchWithUserSession(input: RequestInfo | URL, init: Reque
 
   const { data, error } = await browserSupabase.auth.getSession();
   if (error) throw new Error(error.message);
-  if (!data.session) throw new Error('Please log in to continue.');
+
+  const accessToken = data.session?.access_token;
+  if (!accessToken) throw new Error('Please log in to continue.');
 
   const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${data.session.access_token}`);
+  headers.set('Authorization', 'Bearer ' + accessToken);
 
   return fetch(input, { ...init, headers });
 }

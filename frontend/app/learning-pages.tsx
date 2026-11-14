@@ -45,12 +45,31 @@ const lessonContent={
 const challengeList=[['reverse-string','Reverse a String','Strings · Loops','Easy'],['sum-two-numbers','Sum of Two Numbers','Variables · Input','Easy'],['even-or-odd','Even or Odd','Conditionals','Easy'],['fizzbuzz','FizzBuzz','Loops · Conditionals','Medium'],['palindrome-check','Palindrome Check','Strings · Conditions','Medium'],['factorial','Factorial','Loops · Recursion','Medium'],['count-vowels','Count Vowels','Strings · Loops','Easy'],['second-largest','Second Largest in Array','Arrays · Sorting','Hard'],['fibonacci','Fibonacci','Loops · Recursion','Medium'],['max-array','Max of Array','Arrays · Loops','Easy'],['two-sum','Two Sum','Arrays · Hash maps','Hard'],['anagram-check','Anagram Check','Strings · Sorting','Medium']];
 function Header({active='Learn',courseHref='/course/python',language}:{active?:string;courseHref?:string;language?:Lang}) {
   const [dark,setDark]=useState(false);
+  const [earnedTitle,setEarnedTitle]=useState('Beginner');
   const streak=useLearnerStreak();
   useEffect(()=>{
     const t=localStorage.getItem('bb-theme')||'system';
     const d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);
     setDark(d);
     document.documentElement.classList.toggle('dark',d);
+    async function loadTitle(){
+      try{
+        if(browserSupabase){
+          const {data:sessionData}=await browserSupabase.auth.getSession();
+          if(sessionData.session){
+            const {data:profile}=await browserSupabase.from('profiles').select('experience_level').eq('id',sessionData.session.user.id).maybeSingle();
+            if(profile?.experience_level){
+              const lvl=profile.experience_level;
+              setEarnedTitle(lvl==='beginner'?'Beginner':lvl.charAt(0).toUpperCase()+lvl.slice(1));
+              return;
+            }
+          }
+        }
+        const saved=localStorage.getItem('bb-experience-level')||'Beginner';
+        setEarnedTitle(saved.charAt(0).toUpperCase()+saved.slice(1));
+      }catch{}
+    }
+    void loadTitle();
   },[]);
   function toggle(){
     const d=!dark;
@@ -63,7 +82,6 @@ function Header({active='Learn',courseHref='/course/python',language}:{active?:s
     <nav>
       <a className={active==='Learn'?'nav-active':''} href={courseHref}>Learn</a>
       <a className={active==='Practice'?'nav-active':''} href="/practice">Practice</a>
-      <a className={active==='Interview practice'?'nav-active':''} href="/interview">Interview practice</a>
       <a className={active==='My Progress'?'nav-active':''} href="/dashboard">My Progress</a>
     </nav>
     <div className="top-actions">
@@ -81,7 +99,7 @@ function Header({active='Learn',courseHref='/course/python',language}:{active?:s
           <option value="javascript">JavaScript</option>
         </select>
       </label>}
-      <a href="/profile" className={`profile-btn ${active==='Profile'?'profile-active':''}`}>Profile</a>
+      <a href="/profile" className={`profile-btn ${active==='Profile'?'profile-active':''}`}>{earnedTitle}</a>
     </div>
   </header>;
 }
@@ -137,7 +155,7 @@ export function CoursePage({language}:{language:Lang}) {
             <button className="chapter-summary" onClick={()=>setOpen(open===index?-1:index)}>
               <span className="chapter-num">{index===4||index===items.length-1?'⌖':index+1}</span>
               <b>{name}</b>
-              <span className="chapter-progress">0 / {index===0?4:5}</span>
+              <span className="chapter-progress">{index===0?exercises.filter(([id])=>completedLessons.has(`${language}:${id}`)).length:0} / {index===0?4:5}</span>
               <ChevronDown size={15}/>
             </button>
             {open===index&&(index===0?<>{exercises.map(([id,exercise],j)=>{

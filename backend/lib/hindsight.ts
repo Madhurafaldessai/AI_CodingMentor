@@ -185,7 +185,10 @@ async function hindsightFetch(
   try {
     return await fetch(`${HINDSIGHT_API_URL}${path}`, {
       method,
-      headers: { Authorization: `Bearer ${HINDSIGHT_API_KEY}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: 'Bearer ' + HINDSIGHT_API_KEY,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(HINDSIGHT_TIMEOUT_MS)
     });

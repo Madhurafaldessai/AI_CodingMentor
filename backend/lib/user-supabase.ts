@@ -13,7 +13,7 @@ export async function authenticateUser(request: Request) {
   }
 
   const client = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    global: { headers: { Authorization: 'Bearer ' + accessToken } },
     auth: { autoRefreshToken: false, persistSession: false }
   });
   const { data, error } = await client.auth.getUser(accessToken);

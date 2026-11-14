@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import type { ExplainStyle, HintLevel } from './types';
 
 export type MentorLlmInput = {
@@ -153,16 +152,44 @@ async function callGemini(
   user: string,
   level: HintLevel
 ): Promise<string | null> {
-  const ai = new GoogleGenAI({ vertexai: false, apiKey });
-  const response = await ai.models.generateContent({
-    model,
-    contents: `${system}\n\n${user}`,
-    config: {
-      temperature: 0.3,
-      maxOutputTokens: level === 4 ? 400 : 150
-    }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `${system}\n\n${user}` }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: level === 4 ? 400 : 150
+      }
+    }),
+    signal: AbortSignal.timeout(15000)
   });
-  return response.text?.trim() || null;
+
+  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}`);
+
+  const data = (await response.json()) as {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{ text?: string }>;
+      };
+    }>;
+  };
+
+  const text = data.candidates
+    ?.flatMap((candidate) => candidate.content?.parts ?? [])
+    .map((part) => part.text ?? '')
+    .join('')
+    .trim();
+
+  return text || null;
 }
 
 async function callOpenAiCompatible(
